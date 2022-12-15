@@ -1,0 +1,54 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: Nginx | Copy *.deb packages to /tmp/ 1 of 2
+      synchronize:
+        src: files/nginx_deb/nginx_1.20.1-1~focal_amd64.deb
+        dest: /tmp/
+
+    - name: Nginx | Copy *.deb packages to /tmp/ 2 of 2
+      synchronize:
+        src: files/nginx_deb/nginx-dbg_1.20.1-1~focal_amd64.deb
+        dest: /tmp/        
+
+    - name: Nginx | Installing Nginx 1 of 2
+      apt:
+        deb: /tmp/nginx_1.20.1-1~focal_amd64.deb
+
+    - name: Nginx | Installing Nginx 2 of 2
+      apt:
+        deb: /tmp/nginx-dbg_1.20.1-1~focal_amd64.deb
+
+    - name: Nginx | Copy conf files 1 of 2
+      synchronize:
+        src: files/nginx_conf/conf_file_name_here.conf
+        dest: /etc/nginx/conf.d/
+
+    - name: Nginx | Copy conf files 2 of 2
+      synchronize:
+        src: files/nginx_conf/nginx.conf
+        dest: /etc/nginx/
+
+    - name: Nginx | Install Let's Encrypt Client
+      apt:
+        name: certbot
+        state: latest
+
+    - name: Nginx | Install Pyton 3 Certbot
+      apt:
+        name: python3-certbot-nginx
+        state: latest
+
+    - name: Nginx | Create cache directory
+      file:
+        path: /var/cache/nginx-cache
+        state: directory        
+
+    - name: Nginx | Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted                                             

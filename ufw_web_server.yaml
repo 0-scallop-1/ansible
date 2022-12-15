@@ -1,0 +1,39 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: UFW | Install
+      apt:
+        name: ufw
+        state: latest
+
+    - name: UFW | Allow SSH connections [22]
+      ufw:
+        rule: limit
+        port: ssh
+        proto: tcp
+
+    - name: UFW | Allow all access to tcp port [80] - HTTP
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+
+    - name: UFW | Allow all access to tcp port [443] - HTTPS
+      ufw:
+        rule: allow
+        port: '443'
+        proto: tcp                
+
+    - name: UFW | Deny all other incoming traffic by default
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: UFW | Enable logging
+      ufw:
+        logging: medium            

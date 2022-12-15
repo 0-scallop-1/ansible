@@ -1,0 +1,65 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: Fail2ban - Install
+      apt:
+        name: fail2ban
+        state: latest
+        update_cache: yes
+
+    - name: Fail2ban - Update configuration file - /etc/fail2ban/fail2ban.local
+      template:
+        src: templates/etc/fail2ban/fail2ban.local.j2
+        dest: /etc/fail2ban/fail2ban.local
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Fail2ban - Update configuration file - /etc/fail2ban/jail.local
+      template:
+        src: templates/etc/fail2ban/jail.local.j2
+        dest: /etc/fail2ban/jail.local
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Fail2ban - Copy filters
+      copy:
+        src: "{{ fail2ban_filterd_path }}"
+        dest: /etc/fail2ban/filter.d/
+        owner: root
+        group: root
+        mode: 0644
+      when: fail2ban_filterd_path is defined
+      
+    - name: Fail2ban - Copy actions
+      copy:
+        src: "{{ fail2ban_actiond_path }}"
+        dest: /etc/fail2ban/action.d/
+        owner: root
+        group: root
+        mode: 0644
+      when: fail2ban_actiond_path is defined
+
+    - name: Fail2ban - Copy jails
+      copy:
+        src: "{{ fail2ban_jaild_path }}"
+        dest: /etc/fail2ban/jail.d/
+        owner: root
+        group: root
+        mode: 0644
+      when: fail2ban_jaild_path is defined
+
+    - name: Fail2ban - Remove /etc/fail2ban/jail.d/defaults-debian.conf [file]
+      file:
+        path: /etc/fail2ban/jail.d/defaults-debian.conf
+        state: absent                    
+    
+    - name: Fail2ban - Restart Fail2ban service
+      service:
+        name: fail2ban
+        state: restarted     

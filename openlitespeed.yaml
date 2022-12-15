@@ -1,0 +1,37 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: OpenLiteSpeed - Install dependencies
+      apt:
+        name: gnupg
+        state: latest
+        update_cache: yes
+
+    - name: OpenLiteSpeed - Add signing key
+      apt_key:
+        url: '{{ item }}'
+        state: present
+      loop:
+        - http://rpms.litespeedtech.com/debian/lst_debian_repo.gpg
+        - http://rpms.litespeedtech.com/debian/lst_repo.gpg
+
+    - name: OpenLiteSpeed - Add repository into /etc/apt/sources.list.d
+      apt_repository:
+        repo: 'deb http://rpms.litespeedtech.com/debian/ focal main'
+        filename: lst_debian_repo
+
+    - name: OpenLiteSpeed - Install
+      apt:
+        name: openlitespeed
+        state: present
+        update_cache: yes
+
+    # - name: OpenLiteSpeed - Install LSPHP packages
+    #   apt:
+    #     name: '{{ olsws_lsphp_packages }}'
+    #     state: present
+    #     update_cache: yes

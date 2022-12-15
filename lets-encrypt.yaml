@@ -1,0 +1,16 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: Let's Encrypt Client for Nginx 1 of 2 | Install
+      apt:
+        name: certbot
+        state: latest
+
+    # - name: Let's Encrypt Client for Nginx 2 of 2 | Install
+    #   apt:
+    #     name: python3-certbot-nginx
+    #     state: latest        

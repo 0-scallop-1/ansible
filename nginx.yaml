@@ -1,0 +1,77 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: Nginx | Installing Nginx
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - curl
+        - gnupg2
+        - ca-certificates
+        - lsb-release
+        - ubuntu-keyring
+        - certbot
+        - python3-certbot-nginx
+
+    - name: Nginx | Installing nginx key
+      ansible.builtin.shell: 
+        cmd: curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+
+    - name: Nginx | Installing Nginx
+      ansible.builtin.shell: 
+        cmd: echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
+
+    - name: Nginx | Installing Nginx
+      apt:
+        name: nginx        
+        state: present
+
+    - name: Nginx | Copy website conf files
+      synchronize:
+        src: files/nginx_conf/conf_file_name_here.conf
+        dest: /etc/nginx/conf.d/                                      
+
+    - name: Nginx | Copy Nginx conf file
+      synchronize:
+        src: files/nginx_conf/nginx.conf
+        dest: /etc/nginx/
+
+    - name: Nginx | Create certificate directory
+      file:
+        path: /etc/letsencrypt/
+        state: directory       
+
+    - name: Nginx | Copy SSL Certificate
+      synchronize:
+        src: files/letsencrypt/
+        dest: /etc/letsencrypt/      
+
+    - name: Nginx | Remove web root directory
+      become: true
+      file:
+        path: /srv/www/website
+        state: absent
+
+    - name: Nginx | Create web root directory
+      file:
+        path: /srv/www/website
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes
+                                          
+    - name: Nginx | Create cache directory
+      file:
+        path: /var/cache/nginx-cache
+        state: directory
+
+    - name: Nginx | Copy web files
+      synchronize:
+        src: files/web/index.html
+        dest: /srv/www/website

@@ -1,0 +1,33 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: MeiliSearch | Add repository into /etc/apt/sources.list.d
+      apt_repository:
+        repo: 'deb [trusted=yes] https://apt.fury.io/meilisearch/ /'
+        state: present
+        filename: meilisearch-fury.list
+        update_cache: true
+        
+    - name: MeiliSearch | Install MeiliSearch
+      package:
+        name: meilisearch-http=0.30.4
+        state: present
+
+    - name: MeiliSearch | Copy MeiliSearch service file
+      synchronize:
+        src: files/meilisearch.service
+        dest: /etc/systemd/system/        
+
+    - name: MeiliSearch | Enable Meilisearch service, and not touch the state
+      ansible.builtin.service:
+        name: meilisearch
+        enabled: yes
+        
+    - name: MeiliSearch | Start Meilisearch service, if not started
+      ansible.builtin.service:
+        name: meilisearch
+        state: started                            

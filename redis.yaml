@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: true 
+  vars_files:
+    - vars/default.yaml
+
+  tasks:
+    - name: Redis Server - Add Repository Key
+      apt_key:
+        id: 136221EE520DDFAF0A905689B9316A7BC7917B12
+        keyserver: keyserver.ubuntu.com
+        state: present
+        
+    - name: Redis Server - Add repository into /etc/apt/sources.list.d
+      apt_repository:
+        repo: 'deb http://ppa.launchpad.net/chris-lea/redis-server/ubuntu focal main'
+        state: present
+        filename: redis-server        
+
+    - name: Redis Server - Install
+      apt:
+        name: redis-server
+        state: latest
+        update_cache: yes
